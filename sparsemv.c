@@ -68,7 +68,7 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
       sum += cur_vals[j] * x[cur_inds[j]];
     }
 
-    y[i] = sum + sumVec[0] + sumVec[1] + sumVec[2] + sumVec[3];
+    y[i] = sumVec[0] + sumVec[1] + sumVec[2] + sumVec[3] + sum;
   }
   return 0;
 }
