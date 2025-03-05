@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <immintrin.h>
 
 #include "generate_matrix.h"
 #include "mytimer.h"
@@ -119,6 +120,33 @@ int main(int argc, char *argv[])
   if ((ierr = compute_residual(A->local_nrow, x, xexact, &residual))) {
     fprintf(stderr,"Error in call to compute_residual: %d \n", ierr);
   }
+
+  // The program had a memory leak which is fixed here
+  _mm_free(x);
+  free(b);
+  free(xexact);
+  // destroyMatrix() is in mesh.c which isnt compiled by the Makefile
+  // We can't edit the makefile, so I copied the function here
+  if (A->nnz_in_row) {
+    free(A->nnz_in_row);
+  }
+  if (A->list_of_vals) {
+    free(A->list_of_vals);
+  }
+  if (A->ptr_to_vals_in_row != 0) {
+    free(A->ptr_to_vals_in_row);
+  }
+  if (A->list_of_inds) {
+    free(A->list_of_inds);
+  }
+  if (A->ptr_to_inds_in_row != 0) {
+    free(A->ptr_to_inds_in_row);
+  }
+  if (A->ptr_to_diags) {
+    free(A->ptr_to_diags);
+  }
+  free(A);
+  A = 0;
 
   sprintf(tmpString, "Difference between computed and exact = %e \n", residual);
   strcat(finalStats, tmpString);

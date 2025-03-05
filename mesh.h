@@ -26,6 +26,7 @@ struct mesh
   int *list_of_inds;    //needed for cleaning up memory
 };
 
-void destroyMatrix(struct mesh *A);
+// Makefile doesn't compile mesh.c, so I removed this
+// void destroyMatrix(struct mesh *A);
 
 #endif
