@@ -17,7 +17,6 @@
  */
 int sparsemv(struct mesh *A, const double * const x, double * const y)
 {
-
   const int nrow = (const int) A->local_nrow;
   #pragma omp parallel for num_threads(4)
   for (int i=0; i< nrow-3; i+=4) {
@@ -63,9 +62,17 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
         j+=4;
       }
 
-      for (; j< cur_nnz; j++) {
-        sumVecA[0] += cur_vals[j] * x[cur_inds[j]];
+      
+      if (j< cur_nnz){
+        double sum = cur_vals[j] * x[cur_inds[j]];
+        j++;
+        for (; j< cur_nnz; j++) {
+          sum += cur_vals[j] * x[cur_inds[j]];
+        }
+        sumVecA[0] += sum;
       }
+      
+
     }
     i++;
     __m256d sumVecB = _mm256_setzero_pd();
@@ -110,8 +117,13 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
         j+=4;
       }
 
-      for (; j< cur_nnz; j++) {
-        sumVecB[0] += cur_vals[j] * x[cur_inds[j]];
+      if (j< cur_nnz){
+        double sum = cur_vals[j] * x[cur_inds[j]];
+        j++;
+        for (; j< cur_nnz; j++) {
+          sum += cur_vals[j] * x[cur_inds[j]];
+        }
+        sumVecB[0] += sum;
       }
     }
     i++;
@@ -157,8 +169,13 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
         j+=4;
       }
 
-      for (; j< cur_nnz; j++) {
-        sumVecC[0] += cur_vals[j] * x[cur_inds[j]];
+      if (j< cur_nnz){
+        double sum = cur_vals[j] * x[cur_inds[j]];
+        j++;
+        for (; j< cur_nnz; j++) {
+          sum += cur_vals[j] * x[cur_inds[j]];
+        }
+        sumVecC[0] += sum;
       }
     }
     i++;
@@ -204,8 +221,13 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
         j+=4;
       }
 
-      for (; j< cur_nnz; j++) {
-        sumVecD[0] += cur_vals[j] * x[cur_inds[j]];
+      if (j< cur_nnz){
+        double sum = cur_vals[j] * x[cur_inds[j]];
+        j++;
+        for (; j< cur_nnz; j++) {
+          sum += cur_vals[j] * x[cur_inds[j]];
+        }
+        sumVecD[0] = sum;
       }
     }
     i-=3;
@@ -267,12 +289,17 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
       j+=4;
     }
 
-    for (; j< cur_nnz; j++) {
-      sumVec[0] += cur_vals[j] * x[cur_inds[j]];
+    double sum = 0.0;
+    if (j<cur_nnz) {
+      double sum = cur_vals[j] * x[cur_inds[j]];
+      j++;
+      for (; j< cur_nnz; j++) {
+        sum += cur_vals[j] * x[cur_inds[j]];
+      }
     }
 
-    y[i] = sumVec[0] + sumVec[1] + sumVec[2] + sumVec[3];
-  }
 
+    y[i] = sum + sumVec[0] + sumVec[1] + sumVec[2] + sumVec[3];
+  }
   return 0;
 }
