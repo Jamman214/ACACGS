@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 
   // The program had a memory leak which is fixed here
   _mm_free(x);
-  free(b);
+  _mm_free(b);
   free(xexact);
   // destroyMatrix() is in mesh.c which isnt compiled by the Makefile
   // We can't edit the makefile, so I copied the function here

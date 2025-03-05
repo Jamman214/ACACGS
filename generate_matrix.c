@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <immintrin.h>
 
 #include "generate_matrix.h"
 
@@ -38,8 +39,8 @@ void generate_matrix(int nx, int ny, int nz, struct mesh **A, double **x, double
   (*A)->ptr_to_inds_in_row = (int **) malloc(sizeof(int *) * local_nrow);
   (*A)->ptr_to_diags = (double **) malloc(sizeof(double *) * local_nrow);
 
-  *x = (double *) malloc(sizeof(double) * local_nrow);
-  *b = (double *) malloc(sizeof(double) * local_nrow);
+  *x = (double *) _mm_malloc(sizeof(double) * local_nrow, 32);
+  *b = (double *) _mm_malloc(sizeof(double) * local_nrow, 32);
   *xexact = (double *) malloc(sizeof(double) * local_nrow);
 
   // Allocate arrays that are of length local_nnz
