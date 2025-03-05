@@ -20,7 +20,8 @@ int ddot (const int n, const double * const x, const double * const y, double * 
     {
       #pragma omp for
       for (int i=0; i<parallelN; i+=4) {
-        sumVec = _mm256_add_pd(sumVec, _mm256_mul_pd(_mm256_load_pd(x+i), _mm256_load_pd(x+i)));
+        const __m256d xVec = _mm256_load_pd(x+i);
+        sumVec = _mm256_add_pd(sumVec, _mm256_mul_pd(xVec, xVec));
       }
       local_result += sumVec[0] + sumVec[1] + sumVec[2] + sumVec[3];
     }
