@@ -22,10 +22,10 @@ int ddot (const int n, const double * const x, const double * const y, double * 
       for (int i=0; i<parallelN; i+=4) {
         sumVec = _mm256_add_pd(sumVec, _mm256_mul_pd(_mm256_load_pd(x+i), _mm256_load_pd(x+i)));
       }
-      for (int i=parallelN; i<n; i++) {
-        local_result += x[i]*x[i];
-      }
       local_result += sumVec[0] + sumVec[1] + sumVec[2] + sumVec[3];
+    }
+    for (int i=parallelN; i<n; i++) {
+      local_result += x[i]*x[i];
     }
   } else {
     #pragma omp parallel num_threads(4) reduction(+:local_result) firstprivate(sumVec)
@@ -34,10 +34,10 @@ int ddot (const int n, const double * const x, const double * const y, double * 
       for (int i=0; i<parallelN; i+=4) {
         sumVec = _mm256_add_pd(sumVec, _mm256_mul_pd(_mm256_load_pd(x+i), _mm256_load_pd(y+i)));
       }
-      for (int i=parallelN; i<n; i++) {
-        local_result += x[i]*y[i];
-      }
       local_result += sumVec[0] + sumVec[1] + sumVec[2] + sumVec[3];
+    }
+    for (int i=parallelN; i<n; i++) {
+      local_result += x[i]*y[i];
     }
   }
   *result = local_result;
