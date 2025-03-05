@@ -21,6 +21,7 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
   #pragma omp parallel for num_threads(4)
   for (int i=0; i< nrow-3; i+=4) {
     __m256d sumVecA = _mm256_setzero_pd();
+    double sumA = 0.0;
     {
       const double * const cur_vals = (const double * const) A->ptr_to_vals_in_row[i];
       const int * const cur_inds = (const int * const) A->ptr_to_inds_in_row[i];
@@ -63,19 +64,15 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
       }
 
       
-      if (j< cur_nnz){
-        double sum = cur_vals[j] * x[cur_inds[j]];
-        j++;
-        for (; j< cur_nnz; j++) {
-          sum += cur_vals[j] * x[cur_inds[j]];
-        }
-        sumVecA[0] += sum;
+      for (; j< cur_nnz; j++) {
+        sumA += cur_vals[j] * x[cur_inds[j]];
       }
       
 
     }
     i++;
     __m256d sumVecB = _mm256_setzero_pd();
+    double sumB = 0.0;
     {
       const double * const cur_vals = (const double * const) A->ptr_to_vals_in_row[i];
       const int * const cur_inds = (const int * const) A->ptr_to_inds_in_row[i];
@@ -117,17 +114,13 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
         j+=4;
       }
 
-      if (j< cur_nnz){
-        double sum = cur_vals[j] * x[cur_inds[j]];
-        j++;
-        for (; j< cur_nnz; j++) {
-          sum += cur_vals[j] * x[cur_inds[j]];
-        }
-        sumVecB[0] += sum;
+      for (; j< cur_nnz; j++) {
+        sumB += cur_vals[j] * x[cur_inds[j]];
       }
     }
     i++;
     __m256d sumVecC = _mm256_setzero_pd();
+    double sumC = 0.0;
     {
       const double * const cur_vals = (const double * const) A->ptr_to_vals_in_row[i];
       const int * const cur_inds = (const int * const) A->ptr_to_inds_in_row[i];
@@ -169,17 +162,13 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
         j+=4;
       }
 
-      if (j< cur_nnz){
-        double sum = cur_vals[j] * x[cur_inds[j]];
-        j++;
-        for (; j< cur_nnz; j++) {
-          sum += cur_vals[j] * x[cur_inds[j]];
-        }
-        sumVecC[0] += sum;
+      for (; j< cur_nnz; j++) {
+        sumC += cur_vals[j] * x[cur_inds[j]];
       }
     }
     i++;
     __m256d sumVecD = _mm256_setzero_pd();
+    double sumD = 0.0;
     {
       const double * const cur_vals = (const double * const) A->ptr_to_vals_in_row[i];
       const int * const cur_inds = (const int * const) A->ptr_to_inds_in_row[i];
@@ -221,13 +210,8 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
         j+=4;
       }
 
-      if (j< cur_nnz){
-        double sum = cur_vals[j] * x[cur_inds[j]];
-        j++;
-        for (; j< cur_nnz; j++) {
-          sum += cur_vals[j] * x[cur_inds[j]];
-        }
-        sumVecD[0] = sum;
+      for (; j< cur_nnz; j++) {
+        sumD += cur_vals[j] * x[cur_inds[j]];
       }
     }
     i-=3;
@@ -235,13 +219,16 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
     _mm256_store_pd(
       y+i,
       _mm256_add_pd(
+        _mm256_set_pd(sumD, sumC, sumB, sumA),
         _mm256_add_pd(
-          _mm256_set_pd(sumVecD[0], sumVecC[0], sumVecB[0], sumVecA[0]),
-          _mm256_set_pd(sumVecD[1], sumVecC[1], sumVecB[1], sumVecA[1])
-        ),
-        _mm256_add_pd(
-          _mm256_set_pd(sumVecD[2], sumVecC[2], sumVecB[2], sumVecA[2]),
-          _mm256_set_pd(sumVecD[3], sumVecC[3], sumVecB[3], sumVecA[3])
+          _mm256_add_pd(
+            _mm256_set_pd(sumVecD[0], sumVecC[0], sumVecB[0], sumVecA[0]),
+            _mm256_set_pd(sumVecD[1], sumVecC[1], sumVecB[1], sumVecA[1])
+          ),
+          _mm256_add_pd(
+            _mm256_set_pd(sumVecD[2], sumVecC[2], sumVecB[2], sumVecA[2]),
+            _mm256_set_pd(sumVecD[3], sumVecC[3], sumVecB[3], sumVecA[3])
+          )
         )
       )
     );
@@ -290,14 +277,9 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
     }
 
     double sum = 0.0;
-    if (j<cur_nnz) {
-      double sum = cur_vals[j] * x[cur_inds[j]];
-      j++;
-      for (; j< cur_nnz; j++) {
-        sum += cur_vals[j] * x[cur_inds[j]];
-      }
+    for (; j< cur_nnz; j++) {
+      sum += cur_vals[j] * x[cur_inds[j]];
     }
-
 
     y[i] = sum + sumVec[0] + sumVec[1] + sumVec[2] + sumVec[3];
   }
