@@ -75,7 +75,7 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
         threadSum[0] += cur_vals[j] * x[cur_inds[j]];
       }
 
-      y[i] = threadSum[0] + threadSum[1] + threadSum[2] + + threadSum[3];
+      y[i] = threadSum[0] + threadSum[1] + threadSum[2] + threadSum[3];
     }
   }
   _mm_free(sums);
