@@ -44,7 +44,7 @@ int sparsemv(struct mesh *A, const double * const x, double * const y)
     }
 
     if (j< cur_nnz-7) {
-      // sums 16 iterations of 8 at once
+      // sums 16 iterations of j at once
       sumVec = _mm256_add_pd(
         sumVec,
         _mm256_add_pd(
