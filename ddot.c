@@ -28,6 +28,7 @@ int ddot (const int n, const double * const x, const double * const y, double * 
     for (int i=parallelN; i<n; i++) {
       local_result += x[i]*x[i];
     }
+
   } else {
     #pragma omp parallel num_threads(4) reduction(+:local_result) firstprivate(sumVec)
     {
@@ -41,6 +42,7 @@ int ddot (const int n, const double * const x, const double * const y, double * 
       local_result += x[i]*y[i];
     }
   }
+  
   *result = local_result;
 
   return 0;
